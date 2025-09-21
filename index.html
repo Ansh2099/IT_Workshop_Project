@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery with Lightbox</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Image Gallery</h1>
+        <div class="gallery" id="gallery">
+            <!-- Images will be dynamically loaded here -->
+        </div>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div class="lightbox" id="lightbox">
+        <div class="lightbox-content">
+            <span class="close" id="close">&times;</span>
+            <button class="nav-btn prev" id="prevBtn">&#10094;</button>
+            <button class="nav-btn next" id="nextBtn">&#10095;</button>
+            <img class="lightbox-image" id="lightboxImage" src="" alt="">
+            <div class="image-counter" id="imageCounter"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
