@@ -14,7 +14,7 @@ class ImageGallery {
         this.filterButtons = document.querySelectorAll('.filter-btn');
         
         this.init();
-    }
+    } 
 
     init() {
         this.loadImages();
@@ -24,70 +24,70 @@ class ImageGallery {
     }
 
     loadImages() {
-        // Curated images with matching categories
+        // Curated images with matching categories using direct Unsplash URLs
         this.images = [
             // Nature Images
             { 
-                src: 'https://source.unsplash.com/1600x900/?waterfall', 
+                src: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d',
                 alt: 'Majestic waterfall in a lush forest',
                 category: 'nature' 
             },
             { 
-                src: 'https://source.unsplash.com/1600x900/?mountain',
+                src: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b',
                 alt: 'Snow-capped mountain peaks at sunrise',
                 category: 'nature' 
             },
             { 
-                src: 'https://source.unsplash.com/1600x900/?forest',
+                src: 'https://images.unsplash.com/photo-1511497584788-876760111969',
                 alt: 'Dense forest with sunlight streaming through trees',
                 category: 'nature' 
             },
             { 
-                src: 'https://source.unsplash.com/1600x900/?beach',
+                src: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
                 alt: 'Tropical beach with crystal clear waters',
                 category: 'nature' 
             },
 
             // Architecture Images
             { 
-                src: 'https://source.unsplash.com/1600x900/?skyscraper',
+                src: 'https://images.unsplash.com/photo-1478860409698-8707f313ee8b',
                 alt: 'Modern glass skyscraper reaching into the clouds',
                 category: 'architecture' 
             },
             { 
-                src: 'https://source.unsplash.com/1600x900/?ancient-temple',
+                src: 'https://images.unsplash.com/photo-1496497243327-9dccd845c35f',
                 alt: 'Ancient temple with intricate stone carvings',
                 category: 'architecture' 
             },
             { 
-                src: 'https://source.unsplash.com/1600x900/?modern-building',
+                src: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625',
                 alt: 'Contemporary architectural masterpiece',
                 category: 'architecture' 
             },
             { 
-                src: 'https://source.unsplash.com/1600x900/?bridge',
+                src: 'https://images.unsplash.com/photo-1445991842772-097fea258e7b',
                 alt: 'Engineering marvel of a suspension bridge',
                 category: 'architecture' 
             },
 
             // Animals Images
             { 
-                src: 'https://source.unsplash.com/1600x900/?lion',
+                src: 'https://images.unsplash.com/photo-1546182073-8a1f0240d663',
                 alt: 'Majestic lion in the African savanna',
                 category: 'animals' 
             },
             { 
-                src: 'https://source.unsplash.com/1600x900/?elephant',
+                src: 'https://images.unsplash.com/photo-1544641189-0f669d0ddb19',
                 alt: 'Elephant family walking through the grasslands',
                 category: 'animals' 
             },
             { 
-                src: 'https://source.unsplash.com/1600x900/?dolphin',
+                src: 'https://images.unsplash.com/photo-1547380109-a2fffd5b9036',
                 alt: 'Playful dolphins jumping in the ocean',
                 category: 'animals' 
             },
             { 
-                src: 'https://source.unsplash.com/1600x900/?eagle',
+                src: 'https://images.unsplash.com/photo-1516382799247-87df95d790b7',
                 alt: 'Majestic eagle soaring through the sky',
                 category: 'animals' 
             }
@@ -104,7 +104,9 @@ class ImageGallery {
             galleryItem.className = 'gallery-item loading';
             
             const img = new Image();
-            img.src = image.src;
+            // Add quality and size parameters to the URL
+            const imageUrl = `${image.src}?auto=format&fit=crop&w=800&q=80`;
+            img.src = imageUrl;
             img.alt = image.alt;
             img.loading = 'lazy';
             
@@ -121,6 +123,7 @@ class ImageGallery {
                         <p>Failed to load image</p>
                     </div>
                 `;
+                console.error(`Failed to load image: ${imageUrl}`);
             };
             
             galleryItem.addEventListener('click', () => this.openLightbox(index));

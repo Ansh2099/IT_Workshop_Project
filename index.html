@@ -3,25 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Gallery with Lightbox</title>
+    <title>Dynamic Image Gallery</title>
+    <meta name="description" content="A responsive image gallery with filtering and lightbox features">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Image Gallery</h1>
-        <div class="gallery" id="gallery">
-            <!-- Images will be dynamically loaded here -->
+    <header class="header">
+        <h1>Dynamic Image Gallery</h1>
+        <p>Explore our collection of beautiful images</p>
+    </header>
+
+    <div class="filter-container">
+        <div class="filter-buttons">
+            <button class="filter-btn active" data-category="all">All</button>
+            <button class="filter-btn" data-category="nature">Nature</button>
+            <button class="filter-btn" data-category="architecture">Architecture</button>
+            <button class="filter-btn" data-category="animals">Animals</button>
         </div>
     </div>
 
-    <!-- Lightbox Modal -->
-    <div class="lightbox" id="lightbox">
+    <div id="gallery" class="gallery">
+        <!-- Images will be dynamically loaded here -->
+    </div>
+
+    <div id="lightbox" class="lightbox">
         <div class="lightbox-content">
-            <span class="close" id="close">&times;</span>
-            <button class="nav-btn prev" id="prevBtn">&#10094;</button>
-            <button class="nav-btn next" id="nextBtn">&#10095;</button>
-            <img class="lightbox-image" id="lightboxImage" src="" alt="">
-            <div class="image-counter" id="imageCounter"></div>
+            <img id="lightboxImage" class="lightbox-image" src="" alt="">
+            <button id="close" class="close-btn" aria-label="Close lightbox">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="lightbox-nav">
+                <button id="prevBtn" class="nav-btn" aria-label="Previous image">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <span id="imageCounter" class="image-counter">1 / 1</span>
+                <button id="nextBtn" class="nav-btn" aria-label="Next image">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            <div class="share-menu">
+                <button class="share-btn" aria-label="Share on Facebook">
+                    <i class="fab fa-facebook-f"></i>
+                </button>
+                <button class="share-btn" aria-label="Share on Twitter">
+                    <i class="fab fa-twitter"></i>
+                </button>
+                <button class="share-btn" aria-label="Share on Pinterest">
+                    <i class="fab fa-pinterest-p"></i>
+                </button>
+            </div>
         </div>
     </div>
 
