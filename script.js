@@ -12,7 +12,14 @@ class ImageGallery {
         this.imageCounter = document.getElementById('imageCounter');
         this.gallery = document.getElementById('gallery');
         this.filterButtons = document.querySelectorAll('.filter-btn');
-        
+        // Per-category fallback images (used when an embedded URL fails)
+        this.categoryFallbacks = {
+            nature: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d',
+            architecture: 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29',
+            animals: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d',
+            misc: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e'
+        };
+
         this.init();
     } 
 
@@ -27,11 +34,7 @@ class ImageGallery {
         // Curated images with matching categories using direct Unsplash URLs
         this.images = [
             // Nature Images
-            { 
-                src: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d',
-                alt: 'Majestic waterfall in a lush forest',
-                category: 'nature' 
-            },
+            
             { 
                 src: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b',
                 alt: 'Snow-capped mountain peaks at sunrise',
@@ -50,45 +53,32 @@ class ImageGallery {
 
             // Architecture Images
             { 
-                src: 'https://images.unsplash.com/photo-1478860409698-8707f313ee8b',
-                alt: 'Modern glass skyscraper reaching into the clouds',
+                src: 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=800&q=80',
+                alt: 'Modern city skyline with skyscrapers',
                 category: 'architecture' 
             },
             { 
-                src: 'https://images.unsplash.com/photo-1496497243327-9dccd845c35f',
-                alt: 'Ancient temple with intricate stone carvings',
-                category: 'architecture' 
-            },
-            { 
-                src: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625',
-                alt: 'Contemporary architectural masterpiece',
-                category: 'architecture' 
-            },
-            { 
-                src: 'https://images.unsplash.com/photo-1445991842772-097fea258e7b',
+                src: 'https://images.unsplash.com/photo-1468421870903-4df1664ac249?auto=format&fit=crop&w=800&q=80',
                 alt: 'Engineering marvel of a suspension bridge',
                 category: 'architecture' 
             },
 
             // Animals Images
             { 
-                src: 'https://images.unsplash.com/photo-1546182073-8a1f0240d663',
+                src: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?auto=format&fit=crop&w=800&q=80',
                 alt: 'Majestic lion in the African savanna',
                 category: 'animals' 
             },
             { 
-                src: 'https://images.unsplash.com/photo-1544641189-0f669d0ddb19',
+                // previous entry contained an incorrect placeholder id; keep the embedded approach
+                // but point to a reliable Unsplash image (fallback logic will handle any failures)
+                src: 'https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0',
                 alt: 'Elephant family walking through the grasslands',
                 category: 'animals' 
             },
             { 
-                src: 'https://images.unsplash.com/photo-1547380109-a2fffd5b9036',
-                alt: 'Playful dolphins jumping in the ocean',
-                category: 'animals' 
-            },
-            { 
-                src: 'https://images.unsplash.com/photo-1516382799247-87df95d790b7',
-                alt: 'Majestic eagle soaring through the sky',
+                src: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d',
+                alt: 'Majestic waterfall in a lush forest',
                 category: 'animals' 
             }
         ];
@@ -98,24 +88,31 @@ class ImageGallery {
 
     renderGallery() {
         this.gallery.innerHTML = '';
-        
         this.filteredImages.forEach((image, index) => {
             const galleryItem = document.createElement('div');
             galleryItem.className = 'gallery-item loading';
-            
+
             const img = new Image();
-            // Add quality and size parameters to the URL
-            const imageUrl = `${image.src}?auto=format&fit=crop&w=800&q=80`;
+
+            // Ensure we append quality params to the base URL (strip any existing query string first)
+            const baseSrc = image.src.split('?')[0];
+            const imageUrl = `${baseSrc}?auto=format&fit=crop&w=800&q=80`;
             img.src = imageUrl;
             img.alt = image.alt;
-            img.loading = 'lazy';
-            
-            img.onload = () => {
-                galleryItem.classList.remove('loading');
-                galleryItem.appendChild(img);
-            };
 
+            // If primary URL fails, replace with a category-specific fallback (prevent infinite loop)
+            let triedFallback = false;
             img.onerror = () => {
+                if (!triedFallback) {
+                    triedFallback = true;
+                    const fallbackBase = this.categoryFallbacks[image.category] || this.categoryFallbacks.misc;
+                    const fallbackUrl = `${fallbackBase.split('?')[0]}?auto=format&fit=crop&w=800&q=80`;
+                    console.warn(`Image failed, switching to fallback for category '${image.category}': ${imageUrl} -> ${fallbackUrl}`);
+                    img.src = fallbackUrl;
+                    return;
+                }
+
+                // Final failure: show an inline error element
                 galleryItem.classList.remove('loading');
                 galleryItem.innerHTML = `
                     <div class="error-message">
@@ -123,9 +120,14 @@ class ImageGallery {
                         <p>Failed to load image</p>
                     </div>
                 `;
-                console.error(`Failed to load image: ${imageUrl}`);
+                console.error(`Failed to load image after fallback: ${imageUrl}`);
             };
-            
+
+            img.onload = () => {
+                galleryItem.classList.remove('loading');
+                galleryItem.appendChild(img);
+            };
+
             galleryItem.addEventListener('click', () => this.openLightbox(index));
             this.gallery.appendChild(galleryItem);
         });
@@ -276,12 +278,12 @@ class ImageGallery {
     }
 
     previousImage() {
-        this.currentIndex = (this.currentIndex - 1 + this.images.length) % this.images.length;
+        this.currentIndex = (this.currentIndex - 1 + this.filteredImages.length) % this.filteredImages.length;
         this.updateLightboxImage();
     }
 
     nextImage() {
-        this.currentIndex = (this.currentIndex + 1) % this.images.length;
+        this.currentIndex = (this.currentIndex + 1) % this.filteredImages.length;
         this.updateLightboxImage();
     }
 }
