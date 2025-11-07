@@ -1,7 +1,9 @@
 class ImageGallery {
     constructor() {
         this.images = [];
+        this.filteredImages = [];
         this.currentIndex = 0;
+        this.currentCategory = 'all';
         this.lightbox = document.getElementById('lightbox');
         this.lightboxImage = document.getElementById('lightboxImage');
         this.closeBtn = document.getElementById('close');
@@ -9,30 +11,86 @@ class ImageGallery {
         this.nextBtn = document.getElementById('nextBtn');
         this.imageCounter = document.getElementById('imageCounter');
         this.gallery = document.getElementById('gallery');
+        this.filterButtons = document.querySelectorAll('.filter-btn');
         
         this.init();
     }
 
     init() {
         this.loadImages();
+        this.filteredImages = [...this.images];
         this.bindEvents();
+        this.setupFilters();
     }
 
     loadImages() {
-        // Sample images - in a real project, these would be loaded from a server
+        // Curated images with matching categories
         this.images = [
-            { src: 'https://picsum.photos/800/600?random=1', alt: 'Beautiful landscape 1' },
-            { src: 'https://picsum.photos/800/600?random=2', alt: 'Beautiful landscape 2' },
-            { src: 'https://picsum.photos/800/600?random=3', alt: 'Beautiful landscape 3' },
-            { src: 'https://picsum.photos/800/600?random=4', alt: 'Beautiful landscape 4' },
-            { src: 'https://picsum.photos/800/600?random=5', alt: 'Beautiful landscape 5' },
-            { src: 'https://picsum.photos/800/600?random=6', alt: 'Beautiful landscape 6' },
-            { src: 'https://picsum.photos/800/600?random=7', alt: 'Beautiful landscape 7' },
-            { src: 'https://picsum.photos/800/600?random=8', alt: 'Beautiful landscape 8' },
-            { src: 'https://picsum.photos/800/600?random=9', alt: 'Beautiful landscape 9' },
-            { src: 'https://picsum.photos/800/600?random=10', alt: 'Beautiful landscape 10' },
-            { src: 'https://picsum.photos/800/600?random=11', alt: 'Beautiful landscape 11' },
-            { src: 'https://picsum.photos/800/600?random=12', alt: 'Beautiful landscape 12' }
+            // Nature Images
+            { 
+                src: 'https://source.unsplash.com/1600x900/?waterfall', 
+                alt: 'Majestic waterfall in a lush forest',
+                category: 'nature' 
+            },
+            { 
+                src: 'https://source.unsplash.com/1600x900/?mountain',
+                alt: 'Snow-capped mountain peaks at sunrise',
+                category: 'nature' 
+            },
+            { 
+                src: 'https://source.unsplash.com/1600x900/?forest',
+                alt: 'Dense forest with sunlight streaming through trees',
+                category: 'nature' 
+            },
+            { 
+                src: 'https://source.unsplash.com/1600x900/?beach',
+                alt: 'Tropical beach with crystal clear waters',
+                category: 'nature' 
+            },
+
+            // Architecture Images
+            { 
+                src: 'https://source.unsplash.com/1600x900/?skyscraper',
+                alt: 'Modern glass skyscraper reaching into the clouds',
+                category: 'architecture' 
+            },
+            { 
+                src: 'https://source.unsplash.com/1600x900/?ancient-temple',
+                alt: 'Ancient temple with intricate stone carvings',
+                category: 'architecture' 
+            },
+            { 
+                src: 'https://source.unsplash.com/1600x900/?modern-building',
+                alt: 'Contemporary architectural masterpiece',
+                category: 'architecture' 
+            },
+            { 
+                src: 'https://source.unsplash.com/1600x900/?bridge',
+                alt: 'Engineering marvel of a suspension bridge',
+                category: 'architecture' 
+            },
+
+            // Animals Images
+            { 
+                src: 'https://source.unsplash.com/1600x900/?lion',
+                alt: 'Majestic lion in the African savanna',
+                category: 'animals' 
+            },
+            { 
+                src: 'https://source.unsplash.com/1600x900/?elephant',
+                alt: 'Elephant family walking through the grasslands',
+                category: 'animals' 
+            },
+            { 
+                src: 'https://source.unsplash.com/1600x900/?dolphin',
+                alt: 'Playful dolphins jumping in the ocean',
+                category: 'animals' 
+            },
+            { 
+                src: 'https://source.unsplash.com/1600x900/?eagle',
+                alt: 'Majestic eagle soaring through the sky',
+                category: 'animals' 
+            }
         ];
 
         this.renderGallery();
@@ -41,16 +99,74 @@ class ImageGallery {
     renderGallery() {
         this.gallery.innerHTML = '';
         
-        this.images.forEach((image, index) => {
+        this.filteredImages.forEach((image, index) => {
             const galleryItem = document.createElement('div');
-            galleryItem.className = 'gallery-item';
-            galleryItem.innerHTML = `
-                <img src="${image.src}" alt="${image.alt}" loading="lazy">
-            `;
+            galleryItem.className = 'gallery-item loading';
+            
+            const img = new Image();
+            img.src = image.src;
+            img.alt = image.alt;
+            img.loading = 'lazy';
+            
+            img.onload = () => {
+                galleryItem.classList.remove('loading');
+                galleryItem.appendChild(img);
+            };
+
+            img.onerror = () => {
+                galleryItem.classList.remove('loading');
+                galleryItem.innerHTML = `
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Failed to load image</p>
+                    </div>
+                `;
+            };
             
             galleryItem.addEventListener('click', () => this.openLightbox(index));
             this.gallery.appendChild(galleryItem);
         });
+    }
+
+    setupFilters() {
+        this.filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const category = button.dataset.category;
+                this.filterImages(category);
+                
+                // Update active button
+                this.filterButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+            });
+        });
+    }
+
+    filterImages(category) {
+        this.currentCategory = category;
+        if (category === 'all') {
+            this.filteredImages = [...this.images];
+        } else {
+            this.filteredImages = this.images.filter(image => image.category === category);
+        }
+        this.renderGallery();
+    }
+
+    shareImage(platform) {
+        const currentImage = this.filteredImages[this.currentIndex];
+        const text = `Check out this ${currentImage.alt}`;
+        const url = window.location.href;
+
+        switch(platform) {
+            case 'facebook':
+                window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`);
+                break;
+            case 'twitter':
+                window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`);
+                break;
+            case 'pinterest':
+                window.open(`https://pinterest.com/pin/create/button/?url=${url}&media=${currentImage.src}&description=${text}`);
+                break;
+        }
     }
 
     bindEvents() {
@@ -135,14 +251,25 @@ class ImageGallery {
     }
 
     updateLightboxImage() {
-        const currentImage = this.images[this.currentIndex];
+        const currentImage = this.filteredImages[this.currentIndex];
         this.lightboxImage.src = currentImage.src;
         this.lightboxImage.alt = currentImage.alt;
         this.updateImageCounter();
+
+        // Setup share buttons
+        document.querySelectorAll('.share-btn').forEach(btn => {
+            const platform = btn.querySelector('i').className.includes('facebook') ? 'facebook' :
+                           btn.querySelector('i').className.includes('twitter') ? 'twitter' :
+                           btn.querySelector('i').className.includes('pinterest') ? 'pinterest' : null;
+            
+            if (platform) {
+                btn.onclick = () => this.shareImage(platform);
+            }
+        });
     }
 
     updateImageCounter() {
-        this.imageCounter.textContent = `${this.currentIndex + 1} / ${this.images.length}`;
+        this.imageCounter.textContent = `${this.currentIndex + 1} / ${this.filteredImages.length}`;
     }
 
     previousImage() {
