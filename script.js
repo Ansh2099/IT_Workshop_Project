@@ -84,13 +84,22 @@ class ImageGallery {
             galleryItem.className = 'gallery-item loading';
             const img = new Image();
             
-            // Handle local images differently from Unsplash images
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+            deleteBtn.setAttribute('aria-label', 'Delete image');
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.deleteImage(index);
+            });
+            
             if (image.isLocal) {
                 img.src = image.src;
                 img.alt = image.alt;
                 img.onload = () => {
                     galleryItem.classList.remove('loading');
                     galleryItem.appendChild(img);
+                    galleryItem.appendChild(deleteBtn);
                 };
                 img.onerror = () => {
                     galleryItem.classList.remove('loading');
@@ -102,7 +111,6 @@ class ImageGallery {
                     `;
                 };
             } else {
-                // Handle Unsplash images with fallback
                 const baseSrc = image.src.split('?')[0];
                 const imageUrl = `${baseSrc}?auto=format&fit=crop&w=800&q=80`;
                 img.src = imageUrl;
@@ -127,6 +135,7 @@ class ImageGallery {
                 img.onload = () => {
                     galleryItem.classList.remove('loading');
                     galleryItem.appendChild(img);
+                    galleryItem.appendChild(deleteBtn);
                 };
             }
             
@@ -305,6 +314,61 @@ class ImageGallery {
             top: 20px;
             right: 20px;
             background: #28a745;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 1001;
+            animation: slideIn 0.3s ease;
+        `;
+        
+        document.body.appendChild(successMsg);
+        
+        setTimeout(() => {
+            successMsg.remove();
+        }, 3000);
+    }
+    
+    deleteImage(index) {
+        const imageToDelete = this.filteredImages[index];
+        
+        if (confirm(`Are you sure you want to delete "${imageToDelete.alt}"?`)) {
+            const originalIndex = this.images.findIndex(img => 
+                img.src === imageToDelete.src && img.alt === imageToDelete.alt
+            );
+            
+            if (originalIndex !== -1) {
+                this.images.splice(originalIndex, 1);
+            }
+            
+            this.filteredImages.splice(index, 1);
+            
+            this.renderGallery();
+            
+            this.showDeleteSuccess();
+            
+            if (this.lightbox.classList.contains('show')) {
+                if (this.filteredImages.length === 0) {
+                    this.closeLightbox();
+                } else {
+                    if (this.currentIndex >= this.filteredImages.length) {
+                        this.currentIndex = this.filteredImages.length - 1;
+                    }
+                    this.updateLightboxImage();
+                }
+            }
+        }
+    }
+    
+    showDeleteSuccess() {
+        const successMsg = document.createElement('div');
+        successMsg.className = 'delete-success';
+        successMsg.innerHTML = '<i class="fas fa-check-circle"></i> Image deleted successfully!';
+        successMsg.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #dc3545;
             color: white;
             padding: 1rem 1.5rem;
             border-radius: 8px;
