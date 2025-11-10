@@ -21,6 +21,34 @@
             <button class="filter-btn" data-category="animals">Animals</button>
         </div>
     </div>
+    
+    <div class="upload-container">
+        <div class="upload-section">
+            <h3>Add Your Own Images</h3>
+            <div class="upload-form">
+                <div class="file-input-wrapper">
+                    <input type="file" id="imageUpload" accept="image/*" multiple>
+                    <label for="imageUpload" class="file-input-label">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span>Choose Images or Drag & Drop</span>
+                    </label>
+                </div>
+                <div class="category-selector">
+                    <label for="uploadCategory">Category:</label>
+                    <select id="uploadCategory">
+                        <option value="nature">Nature</option>
+                        <option value="architecture">Architecture</option>
+                        <option value="animals">Animals</option>
+                        <option value="misc">Miscellaneous</option>
+                    </select>
+                </div>
+                <button id="uploadBtn" class="upload-btn" disabled>
+                    <i class="fas fa-plus"></i>
+                    Add to Gallery
+                </button>
+            </div>
+        </div>
+    </div>
     <div id="gallery" class="gallery">
     </div>
     <div id="lightbox" class="lightbox">

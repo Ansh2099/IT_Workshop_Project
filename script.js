@@ -12,6 +12,11 @@ class ImageGallery {
         this.imageCounter = document.getElementById('imageCounter');
         this.gallery = document.getElementById('gallery');
         this.filterButtons = document.querySelectorAll('.filter-btn');
+        this.imageUpload = document.getElementById('imageUpload');
+        this.uploadBtn = document.getElementById('uploadBtn');
+        this.uploadCategory = document.getElementById('uploadCategory');
+        this.fileInputLabel = document.querySelector('.file-input-label');
+        this.selectedFiles = [];
         this.categoryFallbacks = {
             nature: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d',
             architecture: 'https://images.unsplash.com/photo-1501594907352-04cda38ebc29',
@@ -25,6 +30,7 @@ class ImageGallery {
         this.filteredImages = [...this.images];
         this.bindEvents();
         this.setupFilters();
+        this.setupUpload();
     }
     loadImages() {
         this.images = [
@@ -77,31 +83,53 @@ class ImageGallery {
             const galleryItem = document.createElement('div');
             galleryItem.className = 'gallery-item loading';
             const img = new Image();
-            const baseSrc = image.src.split('?')[0];
-            const imageUrl = `${baseSrc}?auto=format&fit=crop&w=800&q=80`;
-            img.src = imageUrl;
-            img.alt = image.alt;
-            let triedFallback = false;
-            img.onerror = () => {
-                if (!triedFallback) {
-                    triedFallback = true;
-                    const fallbackBase = this.categoryFallbacks[image.category] || this.categoryFallbacks.misc;
-                    const fallbackUrl = `${fallbackBase.split('?')[0]}?auto=format&fit=crop&w=800&q=80`;
-                    img.src = fallbackUrl;
-                    return;
-                }
-                galleryItem.classList.remove('loading');
-                galleryItem.innerHTML = `
-                    <div class="error-message">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <p>Failed to load image</p>
-                    </div>
-                `;
-            };
-            img.onload = () => {
-                galleryItem.classList.remove('loading');
-                galleryItem.appendChild(img);
-            };
+            
+            // Handle local images differently from Unsplash images
+            if (image.isLocal) {
+                img.src = image.src;
+                img.alt = image.alt;
+                img.onload = () => {
+                    galleryItem.classList.remove('loading');
+                    galleryItem.appendChild(img);
+                };
+                img.onerror = () => {
+                    galleryItem.classList.remove('loading');
+                    galleryItem.innerHTML = `
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>Failed to load local image</p>
+                        </div>
+                    `;
+                };
+            } else {
+                // Handle Unsplash images with fallback
+                const baseSrc = image.src.split('?')[0];
+                const imageUrl = `${baseSrc}?auto=format&fit=crop&w=800&q=80`;
+                img.src = imageUrl;
+                img.alt = image.alt;
+                let triedFallback = false;
+                img.onerror = () => {
+                    if (!triedFallback) {
+                        triedFallback = true;
+                        const fallbackBase = this.categoryFallbacks[image.category] || this.categoryFallbacks.misc;
+                        const fallbackUrl = `${fallbackBase.split('?')[0]}?auto=format&fit=crop&w=800&q=80`;
+                        img.src = fallbackUrl;
+                        return;
+                    }
+                    galleryItem.classList.remove('loading');
+                    galleryItem.innerHTML = `
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>Failed to load image</p>
+                        </div>
+                    `;
+                };
+                img.onload = () => {
+                    galleryItem.classList.remove('loading');
+                    galleryItem.appendChild(img);
+                };
+            }
+            
             galleryItem.addEventListener('click', () => this.openLightbox(index));
             this.gallery.appendChild(galleryItem);
         });
@@ -165,6 +193,131 @@ class ImageGallery {
             }
         });
         this.addTouchSupport();
+    }
+    
+    setupUpload() {
+        // File input change event
+        this.imageUpload.addEventListener('change', (e) => {
+            this.handleFileSelect(e.target.files);
+        });
+        
+        // Upload button click event
+        this.uploadBtn.addEventListener('click', () => {
+            this.uploadSelectedImages();
+        });
+        
+        // Drag and drop events
+        this.fileInputLabel.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            this.fileInputLabel.classList.add('drag-over');
+        });
+        
+        this.fileInputLabel.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            this.fileInputLabel.classList.remove('drag-over');
+        });
+        
+        this.fileInputLabel.addEventListener('drop', (e) => {
+            e.preventDefault();
+            this.fileInputLabel.classList.remove('drag-over');
+            this.handleFileSelect(e.dataTransfer.files);
+        });
+    }
+    
+    handleFileSelect(files) {
+        this.selectedFiles = Array.from(files).filter(file => {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert(`${file.name} is not a valid image file.`);
+                return false;
+            }
+            
+            // Validate file size (max 10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                alert(`${file.name} is too large. Maximum size is 10MB.`);
+                return false;
+            }
+            
+            return true;
+        });
+        
+        // Update UI
+        if (this.selectedFiles.length > 0) {
+            this.uploadBtn.disabled = false;
+            const fileText = this.selectedFiles.length === 1 
+                ? `${this.selectedFiles[0].name}` 
+                : `${this.selectedFiles.length} files selected`;
+            this.fileInputLabel.querySelector('span').textContent = fileText;
+        } else {
+            this.uploadBtn.disabled = true;
+            this.fileInputLabel.querySelector('span').textContent = 'Choose Images or Drag & Drop';
+        }
+    }
+    
+    uploadSelectedImages() {
+        if (this.selectedFiles.length === 0) return;
+        
+        const category = this.uploadCategory.value;
+        
+        this.selectedFiles.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const newImage = {
+                    src: e.target.result,
+                    alt: file.name.replace(/\.[^/.]+$/, ''), // Remove file extension
+                    category: category,
+                    isLocal: true
+                };
+                
+                this.images.push(newImage);
+                
+                // Update filtered images if current category matches
+                if (this.currentCategory === 'all' || this.currentCategory === category) {
+                    this.filteredImages.push(newImage);
+                }
+                
+                // Re-render gallery
+                this.renderGallery();
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        // Reset upload form
+        this.resetUploadForm();
+        
+        // Show success message
+        this.showUploadSuccess();
+    }
+    
+    resetUploadForm() {
+        this.imageUpload.value = '';
+        this.selectedFiles = [];
+        this.uploadBtn.disabled = true;
+        this.fileInputLabel.querySelector('span').textContent = 'Choose Images or Drag & Drop';
+    }
+    
+    showUploadSuccess() {
+        const successMsg = document.createElement('div');
+        successMsg.className = 'upload-success';
+        successMsg.innerHTML = '<i class="fas fa-check-circle"></i> Images uploaded successfully!';
+        successMsg.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 1001;
+            animation: slideIn 0.3s ease;
+        `;
+        
+        document.body.appendChild(successMsg);
+        
+        setTimeout(() => {
+            successMsg.remove();
+        }, 3000);
     }
     addTouchSupport() {
         let startX = 0;
